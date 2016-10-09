@@ -32,10 +32,22 @@ def update_weights(entries,weights,deltas,learn_r):
     updated_weights = [weight+(learn_r*delta*entries) for weight,delta in zip(weights,deltas)]    
     #print("UPDATED:",updated_weights)    
     return updated_weights
-    
+   
+def calculate_mid_layer(centers,variations,data):
+    return [np.append(-1,[radial_basis_function(d,centers[c],variations[c]) for c in range(len(centers))]) for d in data]
+
+def calculate_outputs(pseudo_sample,output_layer_weights):
+    return [logistic(sum(pseudo_sample*weight)) for weight in output_layer_weights]
+
 def calculate_error(outputs, desireds):
     error = [ (math.pow(o - d,2))/2 for o,d in zip(outputs, desireds)]
     return sum(error)/len(desireds)
+  
+def test_net(centers,variations,data,output_layer_weights):
+    pseudo_samples = calculate_mid_layer(centers,variations,data)
+    outputs = [calculate_outputs(pseudo_sample,output_layer_weights) for pseudo_sample in pseudo_samples]
+    return outputs    
+        
     
 if __name__ == '__main__':
     
@@ -80,8 +92,8 @@ if __name__ == '__main__':
     
     
     #CALCULANDO AS ENTRADAS DA CAMADA DE SAIDA
-    pseudo_samples = [np.append(-1,[radial_basis_function(d[:-1],centers[c],variations[c]) for c in range(len(centers))]) for d in data]
-            
+    #pseudo_samples = [np.append(-1,[radial_basis_function(d[:-1],centers[c],variations[c]) for c in range(len(centers))]) for d in data]
+    pseudo_samples = calculate_mid_layer(centers,variations,data[:,:-1])
     
     #print(pseudo_samples)
     epoch = 0 
@@ -95,8 +107,9 @@ if __name__ == '__main__':
             
             while True:
                 sample_error = 0 
-                outputs = [logistic(sum(pseudo_samples[ps]*weight)) for weight in output_layer_weights]
-                                #print(outputs,desired_output[ps],deltas)
+                outputs = calculate_outputs(pseudo_samples[ps],output_layer_weights)                
+                #outputs = [logistic(sum(pseudo_samples[ps]*weight)) for weight in output_layer_weights]
+                #print(outputs,desired_output[ps],deltas)
                             
                 #CALCULANDO O ERRO
                 sample_error = calculate_error(outputs,desired_output[ps])
@@ -124,9 +137,10 @@ if __name__ == '__main__':
     #FALTA TERMINAR TRINAMENTO
     
     
-    print(output_layer_weights,result)
+    #print(output_layer_weights)
     
-    
+    result = test_net(centers,variations,data[:,:-1],output_layer_weights)
+    print(result)
     
     
     
